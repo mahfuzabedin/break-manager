@@ -3,40 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Break Manager (Collaborative)</title>
+    <title>Team Break Manager (Hybrid)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .time-slot { cursor: pointer; transition: background-color 0.2s; }
-        .time-slot.available:hover { background-color: #cceeff; }
-        .time-slot.booked { background-color: #fde68a; }
-        .time-slot.pending { background-color: #d8b4fe; color: #581c87; }
-        .time-slot.on-break { background-color: #fca5a5; color: white; }
-        .time-slot.ad-hoc { background-color: #93c5fd; color: #1e3a8a; }
-        .sticky-header { position: sticky; left: 0; z-index: 10; background-color: #f9fafb; }
-        .sticky-cell { position: sticky; left: 0; background-color: white; border-right: 1px solid #e5e7eb; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .time-slot {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .time-slot.available:hover {
+            background-color: #cceeff; /* A light blue for hover */
+        }
+        .time-slot.booked { background-color: #fde68a; /* yellow-200 */ }
+        .time-slot.pending { background-color: #d8b4fe; /* purple-300 */ color: #581c87; }
+        .time-slot.on-break { background-color: #fca5a5; /* red-400 */ color: white; }
+        .time-slot.ad-hoc { background-color: #93c5fd; /* blue-300 */ color: #1e3a8a; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
         <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600">Collaborative Break Manager</h1>
-            <p class="text-gray-500 mt-2">A live, shared schedule for the entire team.</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600">Team Break Manager</h1>
+            <p class="text-gray-500 mt-2">Use the Live Roster for immediate breaks or the schedule to book in advance.</p>
         </header>
 
         <!-- Top Row: Controls & Live Status -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Manager Controls -->
             <div class="bg-white p-6 rounded-xl shadow-md animate-fade-in">
                 <h2 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Manager Controls</h2>
                 <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
                     <label for="break-limit" class="font-semibold">Set Break Limit:</label>
                     <input type="number" id="break-limit" value="4" min="1" class="w-24 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button id="set-limit-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Set</button>
                 </div>
                 <div id="manager-requests-panel">
                      <h3 class="text-lg font-bold text-gray-700 border-b pb-2 mb-3">Pending Requests</h3>
@@ -45,13 +57,22 @@
                      </div>
                 </div>
             </div>
+            <!-- Live Status & Roster -->
             <div class="bg-white p-6 rounded-xl shadow-md animate-fade-in">
                  <h2 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Live Roster & Status</h2>
                  <div class="grid grid-cols-2 gap-4 mb-4 text-center">
-                    <div class="bg-green-100 p-3 rounded-lg"><p class="font-semibold text-green-800">Available</p><p id="available-count" class="text-3xl font-bold text-green-600">0</p></div>
-                    <div class="bg-yellow-100 p-3 rounded-lg"><p class="font-semibold text-yellow-800">On Break</p><p id="on-break-count" class="text-3xl font-bold text-yellow-600">0 / 4</p></div>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <p class="font-semibold text-green-800">Available</p>
+                        <p id="available-count" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-lg">
+                        <p class="font-semibold text-yellow-800">On Break</p>
+                        <p id="on-break-count" class="text-3xl font-bold text-yellow-600">0 / 4</p>
+                    </div>
                 </div>
-                <div id="live-roster-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                <div id="live-roster-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Live roster for ad-hoc breaks inserted here -->
+                </div>
             </div>
         </div>
 
@@ -59,8 +80,15 @@
         <div class="bg-white rounded-xl shadow-md animate-fade-in overflow-x-auto">
              <h2 class="text-xl font-bold text-gray-700 border-b pb-2 p-6">Break Booking Schedule</h2>
             <table class="min-w-full text-sm text-left">
-                <thead class="bg-gray-50"><tr><th class="p-3 font-semibold text-gray-600 w-48 sticky-header">Team Member</th></tr></thead>
-                <tbody id="schedule-body"></tbody>
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="p-3 font-semibold text-gray-600 w-48 sticky left-0 bg-gray-50 z-10">Team Member</th>
+                        <!-- Time slots will be dynamically inserted here -->
+                    </tr>
+                </thead>
+                <tbody id="schedule-body">
+                    <!-- Schedule rows will be dynamically inserted here -->
+                </tbody>
             </table>
         </div>
     </div>
@@ -80,273 +108,253 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, runTransaction, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- INITIALIZATION ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-break-manager';
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // --- GLOBAL STATE (from Firestore) ---
-        let teamData = [];
-        let breakData = [];
-        let pendingRequests = [];
-        let breakLimit = 4;
-        let currentRequest = null;
-
-        const timeSlots = Array.from({length: 36}, (_, i) => {
-            const h = 9 + Math.floor(i / 4);
-            const m = (i % 4) * 15;
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        });
-
-        // --- DOM ELEMENTS ---
-        const scheduleHeader = document.querySelector('thead tr');
-        const scheduleBody = document.getElementById('schedule-body');
-        const liveRosterList = document.getElementById('live-roster-list');
-        const breakLimitInput = document.getElementById('break-limit');
-        const availableCountEl = document.getElementById('available-count');
-        const onBreakCountEl = document.getElementById('on-break-count');
-        const authModal = document.getElementById('auth-modal');
-        const requestAuthBtn = document.getElementById('request-auth-btn');
-        const waitSlotBtn = document.getElementById('wait-slot-btn');
-        const pendingRequestsList = document.getElementById('pending-requests-list');
-
-        // --- RENDER FUNCTIONS ---
-        const renderAll = () => {
-            updateLiveStatus();
-            renderSchedule();
-            renderLiveRoster();
-            renderPendingRequests();
-        };
-        
-        const renderLiveRoster = () => {
-            liveRosterList.innerHTML = '';
-            teamData.forEach(member => {
-                const isAvailable = member.status === 'available';
-                const rosterDiv = document.createElement('div');
-                rosterDiv.className = `p-2 rounded-lg flex items-center justify-between transition duration-300 ${isAvailable ? 'bg-gray-50' : 'bg-blue-100'}`;
-                rosterDiv.innerHTML = `
-                    <div class="flex items-center"><div class="w-2 h-2 rounded-full mr-3 ${isAvailable ? 'bg-green-500' : 'bg-blue-500'}"></div><span class="font-semibold">${member.name}</span></div>
-                    <button data-id="${member.id}" class="toggle-adhoc-btn w-28 text-sm text-white font-bold py-1 px-2 rounded-md ${isAvailable ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'}">${isAvailable ? 'Start Break' : 'End Break'}</button>
-                `;
-                liveRosterList.appendChild(rosterDiv);
-            });
-        };
-
-        const renderSchedule = () => {
-            if (!scheduleHeader.querySelector('.time-header')) {
-                timeSlots.forEach(slot => {
-                    const th = document.createElement('th');
-                    th.className = 'p-2 font-semibold text-gray-600 border-l time-header';
-                    th.textContent = slot;
-                    scheduleHeader.appendChild(th);
-                });
-            }
-            scheduleBody.innerHTML = '';
-            teamData.forEach(member => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-t';
-                let rowHtml = `<td class="p-3 font-bold text-gray-700 sticky-cell">${member.name}</td>`;
-                timeSlots.forEach(slot => {
-                    const breakInfo = breakData.find(b => b.memberId === member.id && b.time === slot);
-                    let slotClass = 'available';
-                    let slotText = '';
-                    if (breakInfo) {
-                        slotClass = breakInfo.status;
-                        slotText = breakInfo.status.charAt(0).toUpperCase() + breakInfo.status.slice(1);
-                    }
-                    rowHtml += `<td class="p-0 border-l text-center time-slot ${slotClass}" data-member-id="${member.id}" data-time="${slot}">${slotText}</td>`;
-                });
-                tr.innerHTML = rowHtml;
-                scheduleBody.appendChild(tr);
-            });
-        };
-
-        const renderPendingRequests = () => {
-            pendingRequestsList.innerHTML = '';
-            if (pendingRequests.length === 0) {
-                pendingRequestsList.innerHTML = '<p class="text-gray-500 italic">No pending requests.</p>';
-                return;
-            }
-            pendingRequests.forEach(req => {
-                const member = teamData.find(m => m.id === req.memberId);
-                if (!member) return;
-                const reqDiv = document.createElement('div');
-                reqDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-lg';
-                reqDiv.innerHTML = `
-                    <span><strong>${member.name}</strong> @ <strong>${req.time}</strong></span>
-                    <div class="space-x-2"><button data-id="${req.id}" class="deny-btn bg-red-500 text-white px-3 py-1 rounded text-sm">Deny</button><button data-id="${req.id}" class="approve-btn bg-green-500 text-white px-3 py-1 rounded text-sm">Approve</button></div>
-                `;
-                pendingRequestsList.appendChild(reqDiv);
-            });
-        };
-
-        // --- FIRESTORE & LOGIC FUNCTIONS ---
-        const updateLiveStatus = () => {
-            const now = new Date();
-            const currentTimeSlot = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
-            let onBreakCount = 0;
-            teamData.forEach(member => {
-                const isOnScheduledBreak = breakData.some(b => b.memberId === member.id && b.time === currentTimeSlot && (b.status === 'booked' || b.status === 'on-break'));
-                if (member.status === 'on-ad-hoc-break' || isOnScheduledBreak) {
-                    onBreakCount++;
-                }
-            });
-            availableCountEl.textContent = teamData.length - onBreakCount;
-            onBreakCountEl.textContent = `${onBreakCount} / ${breakLimit}`;
-            if (onBreakCount >= breakLimit) {
-                onBreakCountEl.parentElement.classList.add('bg-red-100', 'text-red-600');
-                onBreakCountEl.parentElement.classList.remove('bg-yellow-100', 'text-yellow-800');
-            } else {
-                onBreakCountEl.parentElement.classList.add('bg-yellow-100', 'text-yellow-800');
-                onBreakCountEl.parentElement.classList.remove('bg-red-100', 'text-red-600');
-            }
-            return onBreakCount;
-        };
-
-        async function handleSlotClick(memberId, time) {
-            const breakId = `${memberId}_${time.replace(":", "")}`;
-            const existingBreak = breakData.find(b => b.id === breakId);
-            
-            if (existingBreak) {
-                if (confirm('Do you want to cancel this break/request?')) {
-                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/breaks`, breakId));
-                    if (existingBreak.status === 'pending') {
-                       await deleteDoc(doc(db, `artifacts/${appId}/public/data/requests`, breakId));
-                    }
-                }
-            } else {
-                const concurrentBreaks = breakData.filter(b => b.time === time && b.status !== 'pending').length;
-                if (concurrentBreaks >= breakLimit) {
-                    currentRequest = { memberId, time, type: 'scheduled' };
-                    authModal.classList.remove('hidden');
-                    return;
-                }
-                await setDoc(doc(db, `artifacts/${appId}/public/data/breaks`, breakId), { id: breakId, memberId, time, status: 'booked' });
-            }
-        }
-
-        async function handleAdHocToggle(memberId) {
-            const member = teamData.find(m => m.id === memberId);
-            if (member.status === 'available') {
-                const onBreakCount = updateLiveStatus();
-                if (onBreakCount >= breakLimit) {
-                    const now = new Date();
-                    const time = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
-                    currentRequest = { memberId, time, type: 'ad-hoc' };
-                    authModal.classList.remove('hidden');
-                    return;
-                }
-                await setDoc(doc(db, `artifacts/${appId}/public/data/team`, String(memberId)), { status: 'on-ad-hoc-break' }, { merge: true });
-            } else {
-                await setDoc(doc(db, `artifacts/${appId}/public/data/team`, String(memberId)), { status: 'available' }, { merge: true });
-            }
-        }
-
-        async function handleRequestAuth() {
-            if (!currentRequest) return;
-            const { memberId, time, type } = currentRequest;
-            const requestId = `${memberId}_${time.replace(":", "")}`;
-            
-            await setDoc(doc(db, `artifacts/${appId}/public/data/requests`, requestId), { id: requestId, memberId, time, type });
-            if (type === 'scheduled') {
-                await setDoc(doc(db, `artifacts/${appId}/public/data/breaks`, requestId), { id: requestId, memberId, time, status: 'pending' });
-            }
-            
-            authModal.classList.add('hidden');
-            currentRequest = null;
-        }
-
-        async function handleManagerAction(e) {
-            if (!e.target.matches('.approve-btn, .deny-btn')) return;
-            const requestId = e.target.dataset.id;
-            const request = pendingRequests.find(r => r.id === requestId);
-            if (!request) return;
-
-            if (e.target.matches('.approve-btn')) {
-                if (request.type === 'scheduled') {
-                    await setDoc(doc(db, `artifacts/${appId}/public/data/breaks`, requestId), { status: 'booked' }, { merge: true });
-                } else {
-                    await setDoc(doc(db, `artifacts/${appId}/public/data/team`, String(request.memberId)), { status: 'on-ad-hoc-break' }, { merge: true });
-                }
-            } else { // Deny
-                if (request.type === 'scheduled') {
-                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/breaks`, requestId));
-                }
-            }
-            await deleteDoc(doc(db, `artifacts/${appId}/public/data/requests`, requestId));
-        }
-        
-        async function setupInitialData() {
-            const initialTeam = [
-                { id: 1, name: 'Mehreen', status: 'available' }, { id: 2, name: 'Nazat', status: 'available' },
-                { id: 3, name: 'Sabit', status: 'available' }, { id: 4, name: 'Zafrin', status: 'available' },
-                { id: 5, name: 'Iftekhar', status: 'available' }, { id: 6, name: 'Jumon', status: 'available' },
-                { id: 7, name: 'Mahfuz', status: 'available' }, { id: 8, name: 'Talal', status: 'available' },
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            let teamData = [
+                { id: 1, name: 'Mehreen', breaks: [], status: 'available' },
+                { id: 2, name: 'Nazat', breaks: [], status: 'available' },
+                { id: 3, name: 'Sabit', breaks: [{time: '10:30', status: 'booked'}, {time: '10:45', status: 'booked'}], status: 'available' },
+                { id: 4, name: 'Zafrin', breaks: [], status: 'available' },
+                { id: 5, name: 'Iftekhar', breaks: [], status: 'available' },
+                { id: 6, name: 'Jumon', breaks: [], status: 'available' },
+                { id: 7, name: 'Mahfuz', breaks: [], status: 'available' },
+                { id: 8, name: 'Talal', breaks: [], status: 'available' },
             ];
-            await runTransaction(db, async (transaction) => {
-                const configDoc = await transaction.get(doc(db, `artifacts/${appId}/public/data/config`, 'main'));
-                if (!configDoc.exists()) {
-                    transaction.set(doc(db, `artifacts/${appId}/public/data/config`, 'main'), { breakLimit: 4 });
-                    for (const member of initialTeam) {
-                        const memberDocRef = doc(db, `artifacts/${appId}/public/data/team`, String(member.id));
-                        transaction.set(memberDocRef, member);
-                    }
+            let breakLimit = 4;
+            let pendingRequests = [];
+            let currentRequest = null;
+            
+            const timeSlots = Array.from({length: 36}, (_, i) => {
+                const h = 9 + Math.floor(i / 4);
+                const m = (i % 4) * 15;
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            });
+
+            // --- DOM ELEMENTS ---
+            const scheduleHeader = document.querySelector('thead tr');
+            const scheduleBody = document.getElementById('schedule-body');
+            const liveRosterList = document.getElementById('live-roster-list');
+            const breakLimitInput = document.getElementById('break-limit');
+            const setLimitBtn = document.getElementById('set-limit-btn');
+            const availableCountEl = document.getElementById('available-count');
+            const onBreakCountEl = document.getElementById('on-break-count');
+            const authModal = document.getElementById('auth-modal');
+            const requestAuthBtn = document.getElementById('request-auth-btn');
+            const waitSlotBtn = document.getElementById('wait-slot-btn');
+            const pendingRequestsList = document.getElementById('pending-requests-list');
+
+            // --- RENDER FUNCTIONS ---
+            const renderAll = () => {
+                const onBreakCount = updateLiveStatus();
+                renderSchedule(onBreakCount);
+                renderLiveRoster();
+                renderPendingRequests();
+            };
+            
+            const renderLiveRoster = () => {
+                liveRosterList.innerHTML = '';
+                teamData.forEach(member => {
+                    const isAvailable = member.status === 'available';
+                    const rosterDiv = document.createElement('div');
+                    rosterDiv.className = `p-2 rounded-lg flex items-center justify-between transition duration-300 ${isAvailable ? 'bg-gray-50' : 'bg-blue-100'}`;
+                    rosterDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 rounded-full mr-3 ${isAvailable ? 'bg-green-500' : 'bg-blue-500'}"></div>
+                            <span class="font-semibold">${member.name}</span>
+                        </div>
+                        <button data-id="${member.id}" class="toggle-adhoc-btn w-28 text-sm text-white font-bold py-1 px-2 rounded-md ${isAvailable ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'}">
+                            ${isAvailable ? 'Start Break' : 'End Break'}
+                        </button>
+                    `;
+                    liveRosterList.appendChild(rosterDiv);
+                });
+            };
+
+            const renderSchedule = (onBreakCount) => {
+                if (!scheduleHeader.querySelector('.time-header')) {
+                    timeSlots.forEach(slot => {
+                        const th = document.createElement('th');
+                        th.className = 'p-2 font-semibold text-gray-600 border-l time-header';
+                        th.textContent = slot;
+                        scheduleHeader.appendChild(th);
+                    });
                 }
-            });
-        }
 
-        // --- EVENT LISTENERS ---
-        breakLimitInput.addEventListener('change', async () => {
-             await setDoc(doc(db, `artifacts/${appId}/public/data/config`, 'main'), { breakLimit: parseInt(breakLimitInput.value) || 4 });
+                scheduleBody.innerHTML = '';
+                teamData.forEach(member => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-t';
+                    let rowHtml = `<td class="p-3 font-bold text-gray-700 sticky left-0 bg-white border-r">${member.name}</td>`;
+                    
+                    timeSlots.forEach(slot => {
+                        const breakInfo = member.breaks.find(b => b.time === slot);
+                        let slotClass = 'available';
+                        let slotText = '';
+                        if (breakInfo) {
+                            slotClass = breakInfo.status;
+                            if(breakInfo.status !== 'available') {
+                                slotText = breakInfo.status.charAt(0).toUpperCase() + breakInfo.status.slice(1);
+                            }
+                        }
+                        rowHtml += `<td class="p-0 border-l text-center time-slot ${slotClass}" data-member-id="${member.id}" data-time="${slot}">${slotText}</td>`;
+                    });
+                    tr.innerHTML = rowHtml;
+                    scheduleBody.appendChild(tr);
+                });
+            };
+
+            const renderPendingRequests = () => {
+                pendingRequestsList.innerHTML = '';
+                if (pendingRequests.length === 0) {
+                    pendingRequestsList.innerHTML = '<p class="text-gray-500 italic">No pending requests.</p>';
+                    return;
+                }
+                pendingRequests.forEach(req => {
+                    const member = teamData.find(m => m.id === req.memberId);
+                    const reqDiv = document.createElement('div');
+                    reqDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-lg';
+                    reqDiv.innerHTML = `
+                        <span><strong>${member.name}</strong> @ <strong>${req.time}</strong></span>
+                        <div class="space-x-2">
+                            <button data-request-id="${req.id}" class="deny-btn bg-red-500 text-white px-3 py-1 rounded text-sm">Deny</button>
+                            <button data-request-id="${req.id}" class="approve-btn bg-green-500 text-white px-3 py-1 rounded text-sm">Approve</button>
+                        </div>
+                    `;
+                    pendingRequestsList.appendChild(reqDiv);
+                });
+            };
+
+            // --- LOGIC FUNCTIONS ---
+            const updateLiveStatus = () => {
+                const now = new Date();
+                const currentTimeSlot = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+                
+                let onBreakCount = 0;
+                teamData.forEach(member => {
+                    const isOnScheduledBreak = member.breaks.some(b => b.time === currentTimeSlot && (b.status === 'booked' || b.status === 'on-break' || b.status === 'ad-hoc'));
+                    if (member.status === 'on-ad-hoc-break' || isOnScheduledBreak) {
+                        onBreakCount++;
+                    }
+                });
+                
+                const availableCount = teamData.length - onBreakCount;
+                availableCountEl.textContent = availableCount;
+                onBreakCountEl.textContent = `${onBreakCount} / ${breakLimit}`;
+
+                if (onBreakCount >= breakLimit) {
+                    onBreakCountEl.parentElement.classList.add('bg-red-100', 'text-red-600');
+                    onBreakCountEl.parentElement.classList.remove('bg-yellow-100', 'text-yellow-800');
+                } else {
+                    onBreakCountEl.parentElement.classList.add('bg-yellow-100', 'text-yellow-800');
+                    onBreakCountEl.parentElement.classList.remove('bg-red-100', 'text-red-600');
+                }
+                return onBreakCount;
+            };
+            
+            const handleSlotClick = (memberId, time) => {
+                const member = teamData.find(m => m.id === memberId);
+                const existingBreak = member.breaks.find(b => b.time === time);
+                
+                if (existingBreak) {
+                    if (confirm('Do you want to cancel this break/request?')) {
+                        member.breaks = member.breaks.filter(b => b.time !== time);
+                        if (existingBreak.status === 'pending') {
+                            pendingRequests = pendingRequests.filter(r => !(r.memberId === memberId && r.time === time));
+                        }
+                    }
+                } else {
+                    let concurrentBreaks = 0;
+                    teamData.forEach(m => {
+                        if (m.breaks.some(b => b.time === time && b.status !== 'pending')) concurrentBreaks++;
+                    });
+                    if (concurrentBreaks >= breakLimit) {
+                        currentRequest = { memberId, time, type: 'scheduled' };
+                        authModal.classList.remove('hidden');
+                        return;
+                    }
+                    member.breaks.push({ time: time, status: 'booked' });
+                }
+                renderAll();
+            };
+
+            const handleAdHocToggle = (memberId) => {
+                const member = teamData.find(m => m.id === memberId);
+                if (member.status === 'available') { // Start break
+                    const onBreakCount = updateLiveStatus();
+                    if (onBreakCount >= breakLimit) {
+                        const now = new Date();
+                        const time = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+                        currentRequest = { memberId, time, type: 'ad-hoc' };
+                        authModal.classList.remove('hidden');
+                        return;
+                    }
+                    member.status = 'on-ad-hoc-break';
+                } else { // End break
+                    member.status = 'available';
+                }
+                renderAll();
+            };
+
+            const handleRequestAuth = () => {
+                if (!currentRequest) return;
+                const { memberId, time } = currentRequest;
+                const requestId = Date.now();
+                pendingRequests.push({ id: requestId, memberId, time, type: currentRequest.type });
+                
+                if (currentRequest.type === 'scheduled') {
+                    const member = teamData.find(m => m.id === memberId);
+                    member.breaks.push({ time: time, status: 'pending' });
+                }
+                
+                authModal.classList.add('hidden');
+                currentRequest = null;
+                renderAll();
+            };
+
+            const handleManagerAction = (e) => {
+                if (!e.target.matches('.approve-btn, .deny-btn')) return;
+                const requestId = parseInt(e.target.dataset.requestId);
+                const request = pendingRequests.find(r => r.id === requestId);
+                if (!request) return;
+
+                const member = teamData.find(m => m.id === request.memberId);
+                
+                if (e.target.matches('.approve-btn')) {
+                    if (request.type === 'scheduled') {
+                        const breakToUpdate = member.breaks.find(b => b.time === request.time && b.status === 'pending');
+                        if (breakToUpdate) breakToUpdate.status = 'booked';
+                    } else { // ad-hoc
+                        member.status = 'on-ad-hoc-break';
+                    }
+                } else { // Deny
+                    const breakToUpdate = member.breaks.find(b => b.time === request.time && b.status === 'pending');
+                    if (breakToUpdate) member.breaks = member.breaks.filter(b => b !== breakToUpdate);
+                }
+
+                pendingRequests = pendingRequests.filter(r => r.id !== requestId);
+                renderAll();
+            };
+
+            // --- EVENT LISTENERS ---
+            setLimitBtn.addEventListener('click', () => {
+                breakLimit = parseInt(breakLimitInput.value, 10) || breakLimit;
+                renderAll();
+            });
+            scheduleBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('time-slot')) handleSlotClick(parseInt(e.target.dataset.memberId), e.target.dataset.time);
+            });
+            liveRosterList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('toggle-adhoc-btn')) handleAdHocToggle(parseInt(e.target.dataset.id));
+            });
+            requestAuthBtn.addEventListener('click', handleRequestAuth);
+            waitSlotBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+            pendingRequestsList.addEventListener('click', handleManagerAction);
+
+            // --- INITIALIZATION ---
+            renderAll();
+            setInterval(renderAll, 30000); // Refresh every 30 seconds
         });
-        scheduleBody.addEventListener('click', (e) => { if (e.target.classList.contains('time-slot')) handleSlotClick(parseInt(e.target.dataset.memberId), e.target.dataset.time); });
-        liveRosterList.addEventListener('click', (e) => { if (e.target.classList.contains('toggle-adhoc-btn')) handleAdHocToggle(parseInt(e.target.dataset.id)); });
-        requestAuthBtn.addEventListener('click', handleRequestAuth);
-        waitSlotBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-        pendingRequestsList.addEventListener('click', handleManagerAction);
-
-        // --- AUTH & DATA LISTENERS ---
-        try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-            console.log("Authenticated successfully.");
-            
-            await setupInitialData();
-            
-            onSnapshot(doc(db, `artifacts/${appId}/public/data/config`, 'main'), (doc) => {
-                breakLimit = doc.data()?.breakLimit || 4;
-                breakLimitInput.value = breakLimit;
-                renderAll();
-            });
-            onSnapshot(collection(db, `artifacts/${appId}/public/data/team`), (snapshot) => {
-                teamData = snapshot.docs.map(doc => ({id: parseInt(doc.id), ...doc.data()}));
-                renderAll();
-            });
-            onSnapshot(collection(db, `artifacts/${appId}/public/data/breaks`), (snapshot) => {
-                breakData = snapshot.docs.map(doc => doc.data());
-                renderAll();
-            });
-            onSnapshot(collection(db, `artifacts/${appId}/public/data/requests`), (snapshot) => {
-                pendingRequests = snapshot.docs.map(doc => doc.data());
-                renderAll();
-            });
-
-        } catch (error) {
-            console.error("Authentication or data loading failed:", error);
-            document.body.innerHTML = `<div class="p-8 text-center text-red-500">Could not connect to the collaborative service. Error: ${error.message}</div>`;
-        }
     </script>
 </body>
 </html>
